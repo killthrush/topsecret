@@ -1,57 +1,58 @@
-from pymongo import MongoClient
-from email.parser import Parser
-import xml.etree.ElementTree as ET
 import os
+from pymongo import MongoClient
 from eml_directory_processor import EMLDirectoryProcessor
-from email_message_abstractions import EmailMessage
-from email_parsing_helpers import (
-    fix_broken_hotmail_headers,
-    get_nested_payload
-)
+from xml_dump_processor import XMLDumpProcessor
 
 process_directory = './email project/temp_processed'
 
 
-def process_email_xml(filename, suffix, parse_email=False):
-    tree = ET.parse(filename)
-    root = tree.getroot()
-    for messageNode in root.iter('message'):
-        print messageNode.attrib
-        text = messageNode.find('text').text.encode('utf8')
-        text = str.lstrip(text, '>') # remove leading char that got into the text somehow
+def process_email_xml_dumps():
 
-        text_array = [text]
-        if parse_email:
-            text = fix_broken_hotmail_headers(text)
-            parser = Parser()
-            mime_message = parser.parsestr(text)
-            text_array, attachments = get_nested_payload(mime_message)
-
-        message = EmailMessage()
-        for text in text_array:
-            message.append_body(text)
-
-        file_name = messageNode.attrib['id'].zfill(4) + '_' + suffix + '.txt'
+    processor = XMLDumpProcessor('./email project/asimov/email_new/from_ben.xml', True)
+    processor.add_callback("logger", email_message_extracted_handler)
+    messages = processor.process()
+    counter = 0
+    for message in messages:
+        file_name = '_' + str(counter) + '_ben.txt'
         with open(os.path.join(process_directory, file_name), "w") as text_file:
             text_file.write(message.get_body())
+        print str.format("Wrote file '{0}'.", file_name)
+        counter += 1
+
+    processor = XMLDumpProcessor('./email project/asimov/email_new/from_mary.xml')
+    processor.add_callback("logger", email_message_extracted_handler)
+    messages = processor.process()
+    counter = 4000
+    for message in messages:
+        file_name = '_' + str(counter) + '_mary.txt'
+        with open(os.path.join(process_directory, file_name), "w") as text_file:
+            text_file.write(message.get_body())
+        print str.format("Wrote file '{0}'.", file_name)
+        counter += 1
 
 
-def process_eml_directory():
+def process_eml_directories():
     processor = EMLDirectoryProcessor('./email project/asimov/emails_mary/2/Mary/')
+    processor.add_callback("logger", email_message_extracted_handler)
     messages = processor.process()
     counter = 10000
     for message in messages:
         file_name = '_' + str(counter) + '_mary.txt'
         with open(os.path.join(process_directory, file_name), 'w') as text_file:
             text_file.write(message.get_body())
+        print str.format("Wrote file '{0}'.", file_name)
+        counter += 1
 
 
 def process_all():
     if not os.path.exists(process_directory):
         os.makedirs(process_directory)
-    process_email_xml('./email project/asimov/email_new/from_ben.xml', 'ben', parse_email=True)
-    process_email_xml('./email project/asimov/email_new/from_mary.xml', 'mary')
-    process_eml_directory()
+    process_email_xml_dumps()
+    process_eml_directories()
+
+
+def email_message_extracted_handler(message):
+    print str.format("Processed Message")
 
 
 if __name__ == '__main__':

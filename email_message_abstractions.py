@@ -14,13 +14,12 @@ class Attachment:
     Encapsulates an abstraction of an email attachment that's useful
     for processing and storage
     """
-    _fields = dict()
-
     def __init__(self):
         """
         Initializer for the Attachment class
         :return: None
         """
+        self._fields = dict()
         self._fields['filename'] = None
         self._fields['content_type'] = None
         self._fields['base64_content'] = None
@@ -31,13 +30,12 @@ class EmailMessage:
     Encapsulates an abstraction of an email message that's useful
     for processing and storage
     """
-    _fields = dict()
-
     def __init__(self):
         """
         Initializer for the EmailMessage class
         :return: None
         """
+        self._fields = dict()
         self._fields['from'] = None
         self._fields['to'] = None
         self._fields['date'] = None
