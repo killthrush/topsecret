@@ -1,4 +1,6 @@
+from pymongo import MongoClient
 from email.parser import Parser
+# IMAPI - for pulling
 import xml.etree.ElementTree as ET
 import os
 import re
@@ -14,6 +16,7 @@ header_list = [
     'Bcc',
     'Comment',
     'Content-Length',
+    'Content-Transfer-Encoding',
     'Content-Type',
     'Date',
     'DomainKey-Signature',
@@ -51,6 +54,14 @@ def is_start_of_junk_section(text):
     if text == '-----Original Message-----':
         return True
     if text == '---------------------------------':
+        return True
+    if text == '__________________________________________________':
+        return True
+    if text == '__________________________________':
+        return True
+    if text == 'Do You Yahoo!?':
+        return True
+    if text == 'Do you Yahoo!?':
         return True
     return False
 
@@ -126,52 +137,45 @@ def process_multipart_eml(file_name, counter):
         text = fix_broken_yahoo_headers(text)
         parser = Parser()
         message = parser.parsestr(text)
-        text = get_nested_payload2(message)
-        ignore_lines = False
-        lines = text.splitlines()
+        text_array, attachments = get_nested_payload(message)
 
         file_name = '_' + str(counter) + '_mary.txt'
         with open(os.path.join(process_directory, file_name), 'w') as text_file:
-            for line in lines:
-                if is_start_of_junk_section(line):
-                    ignore_lines = True
-                if False:
-                    ignore_lines = False
-                if not ignore_lines and not junk_line_pattern.match(line):
-                    text_file.write(line + '\n')
+            for text in text_array:
+                ignore_lines = False
+                lines = text.splitlines()
+                for line in lines:
+                    if is_start_of_junk_section(line):
+                        ignore_lines = True
+                    if False:
+                        ignore_lines = False
+                    if not ignore_lines and not junk_line_pattern.match(line):
+                        text_file.write(line + '\n')
 
 
 def process_eml_directory(path, counter):
     for file_name in os.listdir(path):
+        if file_name == '.DS_Store':
+            continue
         process_multipart_eml(os.path.join(path, file_name), counter)
         counter += 1
 
 
-def get_nested_payload2(message):
+def get_nested_payload(message):
+    message_content_array = []
+    attachments = []
     for sub_message in message.walk():
         content_type = sub_message.get_content_type()
         disposition = sub_message.get('Content-Disposition')
         if content_type == 'text/plain' and disposition == None:
-            return sub_message.get_payload()
-    return None
-
-
-# TODO: make a flattened list of all the leaf nodes so we can get images and documents
-# This currently only finds the first text message
-def get_nested_payload(message):
-
-    text = None
-    #if not message.is_multipart():
-    if not 'multipart/alternative' in message.get_content_type():
-        if 'text/plain' in message.get('Content-Type'):
-            text = message.get_payload().strip()
-    else:
-        for next_message in message.get_payload():
-            temp = get_nested_payload(next_message)
-            if temp:
-                text = temp
-                break
-    return text
+            message_content_array.append(sub_message.get_payload())
+        elif content_type == 'text/html' and disposition == None:
+            pass
+        elif content_type == 'message/rfc822' or content_type == 'multipart/mixed' or content_type == 'multipart/alternative':
+            pass
+        else:
+            attachments.append(sub_message.get_payload())
+    return (message_content_array, attachments)
 
 
 def process_all():
