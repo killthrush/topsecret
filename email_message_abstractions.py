@@ -9,7 +9,7 @@ import re
 _junk_line_pattern = re.compile('^(\.|\s+)$')
 
 
-class Attachment():
+class Attachment:
     """
     Encapsulates an abstraction of an email attachment that's useful
     for processing and storage
@@ -26,7 +26,7 @@ class Attachment():
         self._fields['base64_content'] = None
 
 
-class EmailMessage():
+class EmailMessage:
     """
     Encapsulates an abstraction of an email message that's useful
     for processing and storage
