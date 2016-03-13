@@ -1,13 +1,11 @@
 from pymongo import MongoClient
 from email.parser import Parser
-# IMAPI - for pulling
 import xml.etree.ElementTree as ET
 import os
 import re
-import codecs
+from email_message_abstractions import EmailMessage
 
 process_directory = './email project/temp_processed'
-junk_line_pattern = re.compile('^(\.|\s+)$')
 end_of_simple_header_pattern = re.compile('Content-Length: \d+', re.MULTILINE)
 end_of_multipart_header_pattern = re.compile('X-OriginalArrivalTime: .+\r\n\r\n', re.MULTILINE)
 
@@ -48,23 +46,6 @@ header_list = [
     'X-UIDL'
 ]
 
-def is_start_of_junk_section(text):
-    if text == '_________________________________________________________________':
-        return True
-    if text == '-----Original Message-----':
-        return True
-    if text == '---------------------------------':
-        return True
-    if text == '__________________________________________________':
-        return True
-    if text == '__________________________________':
-        return True
-    if text == 'Do You Yahoo!?':
-        return True
-    if text == 'Do you Yahoo!?':
-        return True
-    return False
-
 
 def fix_broken_hotmail_headers(text):
     end_of_header_match = end_of_simple_header_pattern.search(text)
@@ -102,31 +83,23 @@ def process_email_xml(filename, suffix, parse_email=False):
     root = tree.getroot()
     for messageNode in root.iter('message'):
         print messageNode.attrib
+        text = messageNode.find('text').text.encode('utf8')
+        text = str.lstrip(text, '>') # remove leading char that got into the text somehow
+
+        text_array = [text]
+        if parse_email:
+            text = fix_broken_hotmail_headers(text)
+            parser = Parser()
+            mime_message = parser.parsestr(text)
+            text_array, attachments = get_nested_payload(mime_message)
+
+        message = EmailMessage()
+        for text in text_array:
+            message.append_body(text)
+
         file_name = messageNode.attrib['id'].zfill(4) + '_' + suffix + '.txt'
         with open(os.path.join(process_directory, file_name), "w") as text_file:
-            text = messageNode.find('text').text.encode('utf8')
-            text = str.lstrip(text, '>') # remove leading char that got into the text somehow
-
-            if parse_email:
-                text = fix_broken_hotmail_headers(text)
-                parser = Parser()
-                message = parser.parsestr(text)
-                if not message.is_multipart():
-                    text = message.get_payload().strip()
-                else:
-                    # get image
-                    text = message.get_payload(0).get_payload().strip()
-
-            ignore_lines = False
-            lines = text.splitlines()
-            for line in lines:
-                if is_start_of_junk_section(line):
-                    ignore_lines = True
-                if False:
-                    ignore_lines = False
-                if not ignore_lines and not junk_line_pattern.match(line):
-                    text_file.write(line + '\n')
-    # remove original messages
+            text_file.write(message.get_body())
 
 
 def process_multipart_eml(file_name, counter):
@@ -136,21 +109,16 @@ def process_multipart_eml(file_name, counter):
         text = ''.join(text_file.readlines())
         text = fix_broken_yahoo_headers(text)
         parser = Parser()
-        message = parser.parsestr(text)
-        text_array, attachments = get_nested_payload(message)
+        mime_message = parser.parsestr(text)
+        text_array, attachments = get_nested_payload(mime_message)
+
+        message = EmailMessage()
+        for text in text_array:
+            message.append_body(text)
 
         file_name = '_' + str(counter) + '_mary.txt'
         with open(os.path.join(process_directory, file_name), 'w') as text_file:
-            for text in text_array:
-                ignore_lines = False
-                lines = text.splitlines()
-                for line in lines:
-                    if is_start_of_junk_section(line):
-                        ignore_lines = True
-                    if False:
-                        ignore_lines = False
-                    if not ignore_lines and not junk_line_pattern.match(line):
-                        text_file.write(line + '\n')
+            text_file.write(message.get_body())
 
 
 def process_eml_directory(path, counter):
@@ -175,14 +143,13 @@ def get_nested_payload(message):
             pass
         else:
             attachments.append(sub_message.get_payload())
-    return (message_content_array, attachments)
-
+    return message_content_array, attachments
 
 def process_all():
     if not os.path.exists(process_directory):
         os.makedirs(process_directory)
-    #process_email_xml('./email project/asimov/email_new/from_ben.xml', 'ben', parse_email=True)
-    #process_email_xml('./email project/asimov/email_new/from_mary.xml', 'mary')
+    process_email_xml('./email project/asimov/email_new/from_ben.xml', 'ben', parse_email=True)
+    process_email_xml('./email project/asimov/email_new/from_mary.xml', 'mary')
     counter = 10000
     process_eml_directory('./email project/asimov/emails_mary/2/Mary/', counter)
 
