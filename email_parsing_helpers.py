@@ -9,6 +9,7 @@ import re
 _end_of_simple_header_pattern = re.compile('Content-Length: \d+', re.MULTILINE)
 _end_of_multipart_header_pattern = re.compile('X-OriginalArrivalTime: .+\r\n\r\n', re.MULTILINE)
 
+# Known header types that we need to be able to recognize
 _header_list = [
     'Bcc',
     'Comment',
@@ -45,6 +46,13 @@ _header_list = [
     'X-UIDL'
 ]
 
+# Content types that we never want to keep around permanently
+_ignored_content_types = [
+    'text/html',
+    'message/rfc822',
+    'multipart/mixed',
+    'multipart/alternative'
+]
 
 def fix_broken_hotmail_headers(text):
     """
@@ -74,6 +82,27 @@ def fix_broken_yahoo_headers(text):
     fixed_header_lines = reduce(_merge_broken_header_lines, lines, [])
     return_text = os.linesep.join(fixed_header_lines) + '\r\n\r\n' + text[end_of_header_match.end():]
     return return_text
+
+
+def get_nested_payload(mime_message):
+    """
+    Returns a list of text content and attachments in a MIME message,
+    after filtering out unwanted content. Also handles nested content like forwarded messages.
+    :param mime_message: The MIME message to traverse looking for content
+    :return: A list of plain-text email bodies and a list of base-64 attachments (if any)
+    """
+    message_content_array = []
+    attachments = []
+    for sub_message in mime_message.walk():
+        content_type = sub_message.get_content_type()
+        disposition = sub_message.get('Content-Disposition')
+        if content_type == 'text/plain' and disposition is None:
+            message_content_array.append(sub_message.get_payload())
+        elif content_type in _ignored_content_types and disposition is None:
+            pass # throw away contents we don't want
+        else:
+            attachments.append(sub_message.get_payload())
+    return message_content_array, attachments
 
 
 def _merge_broken_header_lines(accumulator, item):

@@ -3,7 +3,11 @@ from email.parser import Parser
 import xml.etree.ElementTree as ET
 import os
 from email_message_abstractions import EmailMessage
-from email_parsing_helpers import (fix_broken_hotmail_headers, fix_broken_yahoo_headers)
+from email_parsing_helpers import (
+    fix_broken_hotmail_headers,
+    fix_broken_yahoo_headers,
+    get_nested_payload
+)
 
 process_directory = './email project/temp_processed'
 
@@ -33,7 +37,6 @@ def process_email_xml(filename, suffix, parse_email=False):
 
 
 def process_multipart_eml(file_name, counter):
-
     print file_name
     with open(file_name, 'r') as text_file:
         text = ''.join(text_file.readlines())
@@ -58,22 +61,6 @@ def process_eml_directory(path, counter):
         process_multipart_eml(os.path.join(path, file_name), counter)
         counter += 1
 
-
-def get_nested_payload(message):
-    message_content_array = []
-    attachments = []
-    for sub_message in message.walk():
-        content_type = sub_message.get_content_type()
-        disposition = sub_message.get('Content-Disposition')
-        if content_type == 'text/plain' and disposition == None:
-            message_content_array.append(sub_message.get_payload())
-        elif content_type == 'text/html' and disposition == None:
-            pass
-        elif content_type == 'message/rfc822' or content_type == 'multipart/mixed' or content_type == 'multipart/alternative':
-            pass
-        else:
-            attachments.append(sub_message.get_payload())
-    return message_content_array, attachments
 
 def process_all():
     if not os.path.exists(process_directory):
