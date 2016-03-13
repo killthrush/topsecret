@@ -2,80 +2,10 @@ from pymongo import MongoClient
 from email.parser import Parser
 import xml.etree.ElementTree as ET
 import os
-import re
 from email_message_abstractions import EmailMessage
+from email_parsing_helpers import (fix_broken_hotmail_headers, fix_broken_yahoo_headers)
 
 process_directory = './email project/temp_processed'
-end_of_simple_header_pattern = re.compile('Content-Length: \d+', re.MULTILINE)
-end_of_multipart_header_pattern = re.compile('X-OriginalArrivalTime: .+\r\n\r\n', re.MULTILINE)
-
-
-header_list = [
-    'Bcc',
-    'Comment',
-    'Content-Length',
-    'Content-Transfer-Encoding',
-    'Content-Type',
-    'Date',
-    'DomainKey-Signature',
-    'From',
-    'In-Reply-To',
-    'Message-ID',
-    'Mime-Version',
-    'MIME-Version',
-    'Return-Path',
-    'Received',
-    'Subject',
-    'To',
-    'X-Account-Key',
-    'X-Apparently-To',
-    'X-Message-Info',
-    'X-Message-Status',
-    'X-Mozilla-Status',
-    'X-Mozilla-Status2',
-    'X-OriginalArrivalTime',
-    'X-Originating-IP',
-    'X-Originating-Email',
-    'X-RocketMail',
-    'X-RocketUID',
-    'X-RocketMIF',
-    'X-RocketRCL',
-    'X-Rocket-Track',
-    'X-SID-PRA',
-    'X-SID-Result',
-    'X-UIDL'
-]
-
-
-def fix_broken_hotmail_headers(text):
-    end_of_header_match = end_of_simple_header_pattern.search(text)
-    temp_header_text = text[:end_of_header_match.end()].strip()
-    lines = temp_header_text.splitlines()[1:]  # first line is not a header...
-    fixed_header_lines = reduce(merge_broken_header_lines, lines, [])
-    return_text = os.linesep.join(fixed_header_lines) + text[end_of_header_match.end():]
-    return return_text
-
-
-def fix_broken_yahoo_headers(text):
-    end_of_header_match = end_of_multipart_header_pattern.search(text)
-    temp_header_text = text[:end_of_header_match.end()].strip()
-    lines = temp_header_text.splitlines()
-    fixed_header_lines = reduce(merge_broken_header_lines, lines, [])
-    return_text = os.linesep.join(fixed_header_lines) + '\r\n\r\n' + text[end_of_header_match.end():]
-    return return_text
-
-
-def merge_broken_header_lines(accumulator, item):
-    cleaned_item = item.strip()
-    for header in header_list:
-        if item.startswith(header):
-            accumulator.append(cleaned_item)
-            return accumulator
-    try:
-        accumulator[len(accumulator)-1] = accumulator[len(accumulator)-1] + ' ' + cleaned_item
-    except IndexError: # edge case where the first line doesn't start with a header
-        accumulator.append(cleaned_item)
-    return accumulator
 
 
 def process_email_xml(filename, suffix, parse_email=False):
