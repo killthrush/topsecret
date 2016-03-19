@@ -4,8 +4,9 @@ files into structured EmailMessage instances.
 """
 
 import os
+import codecs
+from StringIO import StringIO
 from email.parser import Parser
-from email_message_abstractions import EmailMessage
 from email_parsing_helpers import (
     fix_broken_yahoo_headers,
     get_nested_payload
@@ -60,13 +61,10 @@ class EMLDirectoryProcessor:
         :param file_path: The path to the EML file to process
         :return: A structured EmailMessage instance
         """
-        return_message = EmailMessage()
-        with open(file_path, 'r') as text_file:
-            text = ''.join(text_file.readlines())
+        with codecs.open(file_path, 'rb', 'windows-1252') as text_file:
+            text = unicode(''.join(text_file.readlines()))
             text = fix_broken_yahoo_headers(text)
             parser = Parser()
-            mime_message = parser.parsestr(text)
-            text_array, attachments = get_nested_payload(mime_message)
-            for text in text_array:
-                return_message.append_body(text)
+            mime_message = parser.parse(StringIO(text))
+            return_message = get_nested_payload(mime_message)
         return return_message

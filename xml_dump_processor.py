@@ -4,6 +4,8 @@ into structured EmailMessage instances.
 """
 
 import os
+from StringIO import StringIO
+from dateutil.parser import parse
 import xml.etree.ElementTree as ElementTree
 from email.parser import Parser
 from email_message_abstractions import EmailMessage
@@ -61,15 +63,26 @@ class XMLDumpProcessor:
         :param node: The XML node corresponding to a message
         :return: An EmailMessage instance containing the message contents
         """
-        text = node.find('text').text.encode('utf8')
-        text = str.lstrip(text, '>')  # remove leading char that got into the text somehow
-        text_array = [text]
+        text = unicode(node.find('text').text)
+        text = unicode.lstrip(text, u'>')  # remove leading char that got into the text somehow
         if self._use_eml_parsing:
             text = fix_broken_hotmail_headers(text)
             parser = Parser()
-            mime_message = parser.parsestr(text)
-            text_array, attachments = get_nested_payload(mime_message)
-        return_message = EmailMessage()
-        for text in text_array:
-            return_message.append_body(text)
+            mime_message = parser.parse(StringIO(text))
+            return_message = get_nested_payload(mime_message)
+        else:
+            return_message = EmailMessage()
+            subject_node = node.find('subject')
+            from_node = node.find('from')
+            to_node = node.find('to')
+            date_node = node.find('receivedat')
+            subject = unicode(subject_node.text, 'utf-8') if not subject_node is None else ''
+            sender = '{} <{}>'.format(from_node.find('name').text, from_node.find('email').text)
+            recipient = '{} <{}>'.format(to_node.find('name').text, to_node.find('email').text)
+            date_string = '{} {} -0400'.format(date_node.find('date').text, date_node.find('time').text)
+            return_message.append_body(unicode(text))
+            return_message.set_subject(subject)
+            return_message.set_sender(sender)
+            return_message.set_recipient(recipient)
+            return_message.set_date(parse(date_string))
         return return_message

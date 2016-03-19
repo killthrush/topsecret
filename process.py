@@ -1,4 +1,5 @@
 import os
+import codecs
 from pymongo import MongoClient
 from eml_directory_processor import EMLDirectoryProcessor
 from xml_dump_processor import XMLDumpProcessor
@@ -23,9 +24,17 @@ def process_eml_directory(path):
 def write_messages_to_files(messages, start_index, sender_tag):
     counter = start_index
     for message in messages:
-        file_name = '{}_{}.txt'.format(str(counter).zfill(4), sender_tag)
-        with open(os.path.join(process_directory, file_name), 'w') as text_file:
+        file_name = '{}_{}.txt'.format(str(counter).zfill(4), message.get_sender())
+        with codecs.open(os.path.join(process_directory, file_name), 'w', encoding='utf-8') as text_file:
+            text_file.write('From: {}\n'.format(message.get_sender()))
+            text_file.write('To: {}\n'.format(message.get_recipient()))
+            text_file.write('Date: {}\n\n'.format(message.get_date()))
+            text_file.write('Subject: {}\n\n'.format(message.get_subject()))
             text_file.write(message.get_body())
+            if len(message.get_attachments()) > 0:
+                text_file.write('\n')
+                for attachment in message.get_attachments():
+                    text_file.write('Attachment: {}\n'.format(attachment._fields['filename'] or 'No Filename'))
         print "Wrote file '{0}'.".format(file_name)
         counter += 1
 

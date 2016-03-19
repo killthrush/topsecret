@@ -5,6 +5,8 @@ content into a format that can be read by standard MIME parsers.
 
 import os
 import re
+from dateutil.parser import parse
+from email_message_abstractions import EmailMessage
 
 _end_of_simple_header_pattern = re.compile('Content-Length: \d+', re.MULTILINE)
 _end_of_multipart_header_pattern = re.compile('X-OriginalArrivalTime: .+\r\n\r\n', re.MULTILINE)
@@ -54,6 +56,7 @@ _ignored_content_types = [
     'multipart/alternative'
 ]
 
+
 def fix_broken_hotmail_headers(text):
     """
     Some dumps of hotmail messages introduce weird line breaks into header content,
@@ -86,23 +89,27 @@ def fix_broken_yahoo_headers(text):
 
 def get_nested_payload(mime_message):
     """
-    Returns a list of text content and attachments in a MIME message,
+    Returns a single message object from a list of text content and attachments in a MIME message,
     after filtering out unwanted content. Also handles nested content like forwarded messages.
     :param mime_message: The MIME message to traverse looking for content
     :return: A list of plain-text email bodies and a list of base-64 attachments (if any)
     """
-    message_content_array = []
-    attachments = []
+    return_message = EmailMessage()
+    return_message.set_subject(mime_message.get('Subject'))
+    return_message.set_sender(mime_message.get('From'))
+    return_message.set_recipient(mime_message.get('To'))
+    return_message.set_date(parse(mime_message.get('Date')))
     for sub_message in mime_message.walk():
         content_type = sub_message.get_content_type()
         disposition = sub_message.get('Content-Disposition')
         if content_type == 'text/plain' and disposition is None:
-            message_content_array.append(sub_message.get_payload())
+            x = unicode(sub_message.get_payload())
+            return_message.append_body(x)
         elif content_type in _ignored_content_types and disposition is None:
             pass # throw away contents we don't want
         else:
-            attachments.append(sub_message.get_payload())
-    return message_content_array, attachments
+            return_message.add_attachment(sub_message.get_payload(), content_type=content_type, filename=disposition)
+    return return_message
 
 
 def _merge_broken_header_lines(accumulator, item):
