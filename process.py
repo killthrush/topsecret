@@ -22,20 +22,29 @@ def process_eml_directory(path):
 
 
 def write_messages_to_files(messages, start_index, sender_tag):
+    mongo_client = MongoClient("mongodb://localhost:27017")
+    collection = mongo_client['topsecret']['email']
     counter = start_index
     for message in messages:
-        file_name = '{}_{}.txt'.format(str(counter).zfill(4), message.get_sender())
+        file_name = '{}_{}.txt'.format(str(counter).zfill(4), message.sender)
         with codecs.open(os.path.join(process_directory, file_name), 'w', encoding='utf-8') as text_file:
-            text_file.write('From: {}\n'.format(message.get_sender()))
-            text_file.write('To: {}\n'.format(message.get_recipient()))
-            text_file.write('Date: {}\n\n'.format(message.get_date()))
-            text_file.write('Subject: {}\n\n'.format(message.get_subject()))
-            text_file.write(message.get_body())
-            if len(message.get_attachments()) > 0:
+            text_sections = [
+                'From: {}\n'.format(message.sender),
+                'To: {}\n'.format(message.recipient),
+                'Date: {}\n\n'.format(message.date),
+                'Subject: {}\n\n'.format(message.subject),
+                message.body
+            ]
+            text_buffer = '\n'.join(text_sections)
+            text_file.write(text_buffer)
+            if len(message.attachments) > 0:
                 text_file.write('\n')
-                for attachment in message.get_attachments():
-                    text_file.write('Attachment: {}\n'.format(attachment._fields['filename'] or 'No Filename'))
+                for attachment in message.attachments:
+                    text_file.write('Attachment: {}\n'.format(attachment.filename or 'No Filename'))
         print "Wrote file '{0}'.".format(file_name)
+        document = message.to_dict()
+        result = collection.insert_one(document)
+        print "Wrote document '{0} with hash {1}'.".format(result.inserted_id, document['content_hash'])
         counter += 1
 
 

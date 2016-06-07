@@ -81,8 +81,8 @@ class XMLDumpProcessor:
             recipient = '{} <{}>'.format(to_node.find('name').text, to_node.find('email').text)
             date_string = '{} {} -0400'.format(date_node.find('date').text, date_node.find('time').text)
             return_message.append_body(unicode(text))
-            return_message.set_subject(subject)
-            return_message.set_sender(sender)
-            return_message.set_recipient(recipient)
-            return_message.set_date(parse(date_string))
+            return_message.subject = subject
+            return_message.sender = sender
+            return_message.recipient = recipient
+            return_message.date = parse(date_string)
         return return_message

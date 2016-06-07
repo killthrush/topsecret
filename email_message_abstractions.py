@@ -5,6 +5,9 @@ MIME including headers and routing.
 """
 
 import re
+import hashlib
+import json
+from datetime import datetime
 
 _junk_line_pattern = re.compile('^(\.|\s+)$')
 
@@ -19,10 +22,20 @@ class Attachment:
         Initializer for the Attachment class
         :return: None
         """
-        self._fields = dict()
-        self._fields['filename'] = filename
-        self._fields['content_type'] = content_type
-        self._fields['base64_content'] = content
+        self.filename = filename
+        self.content_type = content_type
+        self.base64_content = content
+
+    def to_dict(self):
+        """
+        Returns a dict representation of the attachment
+        :return: dict
+        """
+        return {
+            'filename': self.filename,
+            'content_type': self.content_type,
+            'content': self.base64_content
+        }
 
 
 class EmailMessage:
@@ -35,81 +48,32 @@ class EmailMessage:
         Initializer for the EmailMessage class
         :return: None
         """
-        self._fields = dict()
-        self._fields['recipient'] = None
-        self._fields['sender'] = None
-        self._fields['date'] = None
-        self._fields['body'] = u''
-        self._fields['subject'] = u''
-        self._fields['attachments'] = []
-        self._fields['content_hash'] = None
+        self.recipient = None
+        self.sender = None
+        self.date = None
+        self.body = u''
+        self.subject = u''
+        self.attachments = []
+        self.content_hash = None
+        self.hasher = hashlib.md5()
 
-    def get_date(self):
+    def to_dict(self):
         """
-        Returns the current date stored in the message instance
-        :return: The date
+        Returns a dict representation of the email message
+        :return: dict
         """
-        return self._fields['date']
-
-    def set_date(self, date):
-        """
-        Set the message date
-        :param date: The date to store
-        :return: None
-        """
-        self._fields['date'] = date
-
-    def get_recipient(self):
-        """
-        Returns the current recipient stored in the message instance
-        :return: The recipient string
-        """
-        return self._fields['recipient']
-
-    def set_recipient(self, recipient):
-        """
-        Set the message recipient
-        :param recipient: The recipient to store
-        :return: None
-        """
-        self._fields['recipient'] = recipient
-
-    def get_sender(self):
-        """
-        Returns the current sender stored in the message instance
-        :return: The sender string
-        """
-        return self._fields['sender']
-
-    def set_sender(self, sender):
-        """
-        Set the message sender
-        :param sender: The sender to store
-        :return: None
-        """
-        self._fields['sender'] = sender
-
-    def get_subject(self):
-        """
-        Returns the current subject stored in the message instance
-        :return: The subject string
-        """
-        return self._fields['subject']
-
-    def set_subject(self, subject_text):
-        """
-        Set the message subject
-        :param subject_text: The subject to store
-        :return: None
-        """
-        self._fields['subject'] = subject_text
-
-    def get_body(self):
-        """
-        Returns the current body stored in the message instance
-        :return: The body string
-        """
-        return self._fields['body']
+        return_dict = {
+            'sender': self.sender,
+            'recipient': self.recipient,
+            'subject': self.subject,
+            'date': datetime.isoformat(self.date),
+            'body': self.body,
+            'attachments': [a.to_dict() for a in self.attachments]
+        }
+        md5 = hashlib.md5()
+        md5.update(json.dumps(return_dict))
+        return_dict['content_hash'] = md5.hexdigest()
+        return return_dict
 
     def append_body(self, input_body_text):
         """
@@ -125,7 +89,7 @@ class EmailMessage:
                 ignore_lines = True
             if not ignore_lines:
                 body_accumulator.append(line)
-        self._fields['body'] += '\n'.join(body_accumulator)
+        self.body += '\n'.join(body_accumulator)
 
     def add_attachment(self, content, content_type, filename=None):
         """
@@ -135,14 +99,7 @@ class EmailMessage:
         :param filename: the original filename of the attachment
         :return: None
         """
-        self._fields['attachments'].append(Attachment(content, content_type, filename=filename))
-
-    def get_attachments(self):
-        """
-        Returns the current list of attachments stored in the message instance
-        :return: The attachments list
-        """
-        return self._fields['attachments']
+        self.attachments.append(Attachment(content, content_type, filename=filename))
 
     @staticmethod
     def _is_start_of_junk_section(text):

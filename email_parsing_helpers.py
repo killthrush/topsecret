@@ -95,10 +95,10 @@ def get_nested_payload(mime_message):
     :return: A list of plain-text email bodies and a list of base-64 attachments (if any)
     """
     return_message = EmailMessage()
-    return_message.set_subject(mime_message.get('Subject'))
-    return_message.set_sender(mime_message.get('From'))
-    return_message.set_recipient(mime_message.get('To'))
-    return_message.set_date(parse(mime_message.get('Date')))
+    return_message.subject = mime_message.get('Subject')
+    return_message.sender = mime_message.get('From')
+    return_message.recipient = mime_message.get('To')
+    return_message.date = parse(mime_message.get('Date'))
     for sub_message in mime_message.walk():
         content_type = sub_message.get_content_type()
         disposition = sub_message.get('Content-Disposition')
