@@ -54,15 +54,27 @@ class EmailMessage:
         self.body = u''
         self.subject = u''
         self.attachments = []
-        self.content_hash = None
+        self.ordinal_number = None
+        self.source = None
         self.hasher = hashlib.md5()
 
-    def to_dict(self):
+    @property
+    def content_hash(self):
         """
-        Returns a dict representation of the email message
+        Calculates an MD5 hash of the current contents of the message object
+        :return: string
+        """
+        content = self._get_content()
+        md5 = hashlib.md5()
+        md5.update(json.dumps(content))
+        return md5.hexdigest()
+
+    def _get_content(self):
+        """
+        Returns a dict containing a subset of the message's data
         :return: dict
         """
-        return_dict = {
+        return {
             'sender': self.sender,
             'recipient': self.recipient,
             'subject': self.subject,
@@ -70,9 +82,15 @@ class EmailMessage:
             'body': self.body,
             'attachments': [a.to_dict() for a in self.attachments]
         }
-        md5 = hashlib.md5()
-        md5.update(json.dumps(return_dict))
-        return_dict['content_hash'] = md5.hexdigest()
+
+    def to_dict(self):
+        """
+        Returns a dict representation of the email message, including a content hash
+        used to de-dupe messages.
+        :return: dict
+        """
+        return_dict = self._get_content()
+        return_dict['content_hash'] = self.content_hash
         return return_dict
 
     def append_body(self, input_body_text):
@@ -110,18 +128,14 @@ class EmailMessage:
         :param text: A line of text that will be evaluated to see if it's junk
         :return: True if the line is evaluated as junk, else false
         """
-        if text == '_________________________________________________________________':
-            return True
-        if text == '-----Original Message-----':
-            return True
-        if text == '---------------------------------':
-            return True
-        if text == '__________________________________________________':
-            return True
-        if text == '__________________________________':
-            return True
-        if text == 'Do You Yahoo!?':
-            return True
-        if text == 'Do you Yahoo!?':
-            return True
-        return False
+        junk_patterns = set([
+            '_________________________________________________________________',
+            '-----Original Message-----',
+            '---------------------------------',
+            '__________________________________________________',
+            '__________________________________',
+            'Do You Yahoo!?',
+            'Do you Yahoo!?'
+        ])
+        return text in junk_patterns
+
