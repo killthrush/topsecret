@@ -85,4 +85,5 @@ class XMLDumpProcessor:
             return_message.sender = sender
             return_message.recipient = recipient
             return_message.date = parse(date_string)
+        return_message.source = "XML File {} node {}".format(self._process_path, node.attrib)
         return return_message

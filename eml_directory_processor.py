@@ -67,4 +67,5 @@ class EMLDirectoryProcessor:
             parser = Parser()
             mime_message = parser.parse(StringIO(text))
             return_message = get_nested_payload(mime_message)
+            return_message.source = "EML File {}".format(file_path)
         return return_message
