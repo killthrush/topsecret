@@ -4,7 +4,10 @@
   "description": "Top Secret Email Browser",
   "main": "index.js",
   "scripts": {
-    "test": "test"
+    "build": "./node_modules/webpack/bin/webpack.js",
+    "start": "./node_modules/webpack-dev-server/bin/webpack-dev-server.js",
+    "archive": "tar cvJf node_modules.tar.xz node_modules",
+    "dearchive": "tar xvJf node_modules.tar.xz node_modules && npm rebuild"
   },
   "repository": {
     "type": "git",
