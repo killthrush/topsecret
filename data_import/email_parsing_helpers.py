@@ -106,7 +106,7 @@ def get_nested_payload(mime_message):
             x = unicode(sub_message.get_payload())
             return_message.append_body(x)
         elif content_type in _ignored_content_types and disposition is None:
-            pass # throw away contents we don't want
+            pass  # throw away contents we don't want
         else:
             return_message.add_attachment(sub_message.get_payload(), content_type=content_type, filename=disposition)
     return return_message
@@ -127,6 +127,6 @@ def _merge_broken_header_lines(accumulator, item):
             return accumulator
     try:
         accumulator[len(accumulator)-1] = accumulator[len(accumulator)-1] + ' ' + cleaned_item
-    except IndexError: # edge case where the first line doesn't start with a header
+    except IndexError:  # edge case where the first line doesn't start with a header
         accumulator.append(cleaned_item)
     return accumulator

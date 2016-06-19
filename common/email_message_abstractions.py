@@ -1,41 +1,10 @@
-"""
-Module containing email message classes useful for storing
-and processing. Abstracts away many of the gory details of
-MIME including headers and routing.
-"""
-
 import re
 import hashlib
 import json
 from datetime import datetime
+from common.attachment import Attachment
 
 _junk_line_pattern = re.compile('^(\.|\s+)$')
-
-
-class Attachment:
-    """
-    Encapsulates an abstraction of an email attachment that's useful
-    for processing and storage
-    """
-    def __init__(self, content, content_type, filename=None):
-        """
-        Initializer for the Attachment class
-        :return: None
-        """
-        self.filename = filename
-        self.content_type = content_type
-        self.base64_content = content
-
-    def to_dict(self):
-        """
-        Returns a dict representation of the attachment
-        :return: dict
-        """
-        return {
-            'filename': self.filename,
-            'content_type': self.content_type,
-            'content': self.base64_content
-        }
 
 
 class EmailMessage:
@@ -128,7 +97,7 @@ class EmailMessage:
         :param text: A line of text that will be evaluated to see if it's junk
         :return: True if the line is evaluated as junk, else false
         """
-        junk_patterns = set([
+        junk_patterns = {
             '_________________________________________________________________',
             '-----Original Message-----',
             '---------------------------------',
@@ -136,6 +105,5 @@ class EmailMessage:
             '__________________________________',
             'Do You Yahoo!?',
             'Do you Yahoo!?'
-        ])
+        }
         return text in junk_patterns
-
