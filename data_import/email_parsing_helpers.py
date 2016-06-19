@@ -6,7 +6,7 @@ content into a format that can be read by standard MIME parsers.
 import os
 import re
 from dateutil.parser import parse
-from common.email_message_abstractions import EmailMessage
+from common.email_message import EmailMessage
 
 _end_of_simple_header_pattern = re.compile('Content-Length: \d+', re.MULTILINE)
 _end_of_multipart_header_pattern = re.compile('X-OriginalArrivalTime: .+\r\n\r\n', re.MULTILINE)
