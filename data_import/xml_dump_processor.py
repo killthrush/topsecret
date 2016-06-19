@@ -11,7 +11,8 @@ from email.parser import Parser
 from common.email_message import EmailMessage
 from email_parsing_helpers import (
     fix_broken_hotmail_headers,
-    get_nested_payload
+    get_nested_payload,
+    use_full_parser
 )
 
 
@@ -20,7 +21,7 @@ class XMLDumpProcessor:
     Class that manages processing an XML extract of an outlook mailbox
     into structured EmailMessage instances.
     """
-    def __init__(self, process_path, use_eml_parsing=False):
+    def __init__(self, process_path):
         """
         Initializer for the XMLDumpProcessor class
         :param process_path: Path at which we will find an XML dump file to process
@@ -29,7 +30,6 @@ class XMLDumpProcessor:
         """
         self._callbacks = dict()
         self._process_path = process_path
-        self._use_eml_parsing = use_eml_parsing
         if not os.path.exists(self._process_path):
             raise ValueError(str.format("File '{0}' does not exist.", self._process_path))
 
@@ -65,7 +65,7 @@ class XMLDumpProcessor:
         """
         text = unicode(node.find('text').text)
         text = unicode.lstrip(text, u'>')  # remove leading char that got into the text somehow
-        if self._use_eml_parsing:
+        if use_full_parser(text):
             text = fix_broken_hotmail_headers(text)
             parser = Parser()
             mime_message = parser.parse(StringIO(text))

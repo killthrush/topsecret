@@ -22,8 +22,8 @@ class Processor(object):
         self._email_collection.delete_many({})
         self._source_collection.delete_many({})
 
-    def process_email_xml_dump(self, path, parse_email):
-        processor = XMLDumpProcessor(path, parse_email)
+    def process_email_xml_dump(self, path):
+        processor = XMLDumpProcessor(path)
         processor.add_callback("logger", self.email_message_extracted_handler)
         messages = processor.process()
         return messages
@@ -36,13 +36,13 @@ class Processor(object):
 
     def write_messages_to_files(self, messages):
         for message in messages:
-            file_name = '{}_{}.txt'.format(str(message.ordinal_number).zfill(4), message.sender)
+            file_name = u'{}_{}.txt'.format(str(message.ordinal_number).zfill(4), message.sender)
             with codecs.open(os.path.join(self._process_directory, file_name), 'w', encoding='utf-8') as text_file:
                 text_sections = [
-                    'From: {}\n'.format(message.sender),
-                    'To: {}\n'.format(message.recipient),
-                    'Date: {}\n\n'.format(message.date),
-                    'Subject: {}\n\n'.format(message.subject),
+                    u'From: {}\n'.format(message.sender),
+                    u'To: {}\n'.format(message.recipient),
+                    u'Date: {}\n\n'.format(message.date),
+                    u'Subject: {}\n\n'.format(message.subject),
                     message.body
                 ]
                 text_buffer = '\n'.join(text_sections)
@@ -51,16 +51,24 @@ class Processor(object):
                     text_file.write('\n')
                     for attachment in message.attachments:
                         text_file.write('Attachment: {}\n'.format(attachment.filename or 'No Filename'))
-            print "Wrote file '{0}'.".format(file_name)
+            print u"Wrote file '{0}'.".format(file_name)
             self.write_mongo_document(message)
 
     def process_all(self):
         if not os.path.exists(self._process_directory):
             os.makedirs(self._process_directory)
         all_messages = []
-        all_messages += self.process_email_xml_dump('./email project/asimov/email_new/from_ben.xml', True)
-        all_messages += self.process_email_xml_dump('./email project/asimov/email_new/from_mary.xml', False)
+        all_messages += self.process_email_xml_dump('./email project/asimov/email_new/from_ben.xml')
+        all_messages += self.process_email_xml_dump('./email project/asimov/email_new/from_mary.xml')
         all_messages += self.process_eml_directory('./email project/asimov/emails_mary/2/Mary/')
+        all_messages += self.process_eml_directory('./email project/asimov/emails_mary/mary00000001/')
+        all_messages += self.process_eml_directory('./email project/asimov/emails_mary/mary/')
+        all_messages += self.process_email_xml_dump('./email project/baxter/email_new/Copy of from_ben.xml')
+        all_messages += self.process_email_xml_dump('./email project/baxter/email_new/from_ben.xml')
+        all_messages += self.process_email_xml_dump('./email project/baxter/email_new/from_mary.xml')
+        all_messages += self.process_eml_directory('./email project/baxter/emails_mary/2/Mary/')
+        all_messages += self.process_eml_directory('./email project/baxter/emails_mary/mary00000001/')
+        all_messages += self.process_eml_directory('./email project/baxter/emails_mary/mary/')
         self.write_messages_to_files(all_messages)
 
     def write_mongo_document(self, message):

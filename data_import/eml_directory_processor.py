@@ -9,7 +9,8 @@ from StringIO import StringIO
 from email.parser import Parser
 from email_parsing_helpers import (
     fix_broken_yahoo_headers,
-    get_nested_payload
+    get_nested_payload,
+    use_full_parser
 )
 
 
@@ -63,7 +64,8 @@ class EMLDirectoryProcessor:
         """
         with codecs.open(file_path, 'rb', 'windows-1252') as text_file:
             text = unicode(''.join(text_file.readlines()))
-            text = fix_broken_yahoo_headers(text)
+            if use_full_parser(text):
+                text = fix_broken_yahoo_headers(text)
             parser = Parser()
             mime_message = parser.parse(StringIO(text))
             return_message = get_nested_payload(mime_message)

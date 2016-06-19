@@ -56,6 +56,14 @@ _ignored_content_types = [
     'multipart/alternative'
 ]
 
+def use_full_parser(text):
+    """
+    Examine the text to see if we need to use full MIME parsing or not.
+    :param text: The text to examine
+    :return: Boolean - true if full parsing needs to be used else false
+    """
+    end_of_header_match = _end_of_simple_header_pattern.search(text)
+    return end_of_header_match is not None
 
 def fix_broken_hotmail_headers(text):
     """
