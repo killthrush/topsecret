@@ -8,7 +8,7 @@ from StringIO import StringIO
 from dateutil.parser import parse
 import xml.etree.ElementTree as ElementTree
 from email.parser import Parser
-from email_message_abstractions import EmailMessage
+from common.email_message_abstractions import EmailMessage
 from email_parsing_helpers import (
     fix_broken_hotmail_headers,
     get_nested_payload

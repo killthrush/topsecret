@@ -89,7 +89,3 @@ class Processor(object):
         stats = (self._overall_counter, self._document_counter, self._duplicate_counter)
         print "{} messages processed, with {} unique messages found and {} duplicates.".format(*stats)
 
-if __name__ == '__main__':
-    processor = Processor()
-    processor.process_all()
-    processor.print_stats()
