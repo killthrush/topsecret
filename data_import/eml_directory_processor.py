@@ -10,7 +10,10 @@ from email.parser import Parser
 from email_parsing_helpers import (
     fix_broken_yahoo_headers,
     get_nested_payload,
-    use_full_parser
+    use_full_parser,
+    normalize_to_utc,
+    clean_sender,
+    clean_recipient
 )
 
 
@@ -19,14 +22,16 @@ class EMLDirectoryProcessor:
     Class that manages processing a directory full of .eml
     files into structured EmailMessage instances.
     """
-    def __init__(self, process_directory):
+    def __init__(self, process_directory, timezone):
         """
         Initializer for the EMLDirectoryProcessor class
         :param process_directory: Directory where EML files will be loaded.
+        :param timezone: pytz timezone string used to convert dates to UTC
         :return: None
         """
         self._callbacks = dict()
         self._process_directory = process_directory
+        self._timezone = timezone
         if not os.path.exists(self._process_directory):
             raise ValueError(str.format("Directory '{0}' does not exist.", self._process_directory))
 
@@ -49,6 +54,7 @@ class EMLDirectoryProcessor:
             if file_name == '.DS_Store':
                 continue  # Skip these files on OSX systems
             message = self._process_multipart_eml(os.path.join(self._process_directory, file_name))
+            message.date = normalize_to_utc(message.date, self._timezone)
             output_contents.append(message)
             for callback in self._callbacks.values():
                 callback(message)

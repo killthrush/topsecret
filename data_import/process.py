@@ -5,6 +5,11 @@ from pymongo.errors import DuplicateKeyError
 from eml_directory_processor import EMLDirectoryProcessor
 from xml_dump_processor import XMLDumpProcessor
 
+TIMEZONES = {
+    "ben": "US/Eastern",
+    "mary": "Asia/Seoul"
+}
+
 
 class Processor(object):
     def __init__(self, process_directory=None, mongo_uri=None):
@@ -22,14 +27,14 @@ class Processor(object):
         self._email_collection.delete_many({})
         self._source_collection.delete_many({})
 
-    def process_email_xml_dump(self, path):
-        processor = XMLDumpProcessor(path)
+    def process_email_xml_dump(self, path, timezone):
+        processor = XMLDumpProcessor(path, timezone)
         processor.add_callback("logger", self.email_message_extracted_handler)
         messages = processor.process()
         return messages
 
-    def process_eml_directory(self, path):
-        processor = EMLDirectoryProcessor(path)
+    def process_eml_directory(self, path, timezone):
+        processor = EMLDirectoryProcessor(path, timezone)
         processor.add_callback("logger", self.email_message_extracted_handler)
         messages = processor.process()
         return messages
@@ -58,17 +63,17 @@ class Processor(object):
         if not os.path.exists(self._process_directory):
             os.makedirs(self._process_directory)
         all_messages = []
-        all_messages += self.process_email_xml_dump('./email project/asimov/email_new/from_ben.xml')
-        all_messages += self.process_email_xml_dump('./email project/asimov/email_new/from_mary.xml')
-        all_messages += self.process_eml_directory('./email project/asimov/emails_mary/2/Mary/')
-        all_messages += self.process_eml_directory('./email project/asimov/emails_mary/mary00000001/')
-        all_messages += self.process_eml_directory('./email project/asimov/emails_mary/mary/')
-        all_messages += self.process_email_xml_dump('./email project/baxter/email_new/Copy of from_ben.xml')
-        all_messages += self.process_email_xml_dump('./email project/baxter/email_new/from_ben.xml')
-        all_messages += self.process_email_xml_dump('./email project/baxter/email_new/from_mary.xml')
-        all_messages += self.process_eml_directory('./email project/baxter/emails_mary/2/Mary/')
-        all_messages += self.process_eml_directory('./email project/baxter/emails_mary/mary00000001/')
-        all_messages += self.process_eml_directory('./email project/baxter/emails_mary/mary/')
+        all_messages += self.process_email_xml_dump('./email project/asimov/email_new/from_ben.xml', 'US/Eastern')
+        all_messages += self.process_email_xml_dump('./email project/asimov/email_new/from_mary.xml', 'Asia/Seoul')
+        all_messages += self.process_eml_directory('./email project/asimov/emails_mary/2/Mary/', 'Asia/Seoul')
+        all_messages += self.process_eml_directory('./email project/asimov/emails_mary/mary00000001/', 'Asia/Seoul')
+        all_messages += self.process_eml_directory('./email project/asimov/emails_mary/mary/', 'Asia/Seoul')
+        all_messages += self.process_email_xml_dump('./email project/baxter/email_new/Copy of from_ben.xml', 'US/Eastern')
+        all_messages += self.process_email_xml_dump('./email project/baxter/email_new/from_ben.xml', 'US/Eastern')
+        all_messages += self.process_email_xml_dump('./email project/baxter/email_new/from_mary.xml', 'Asia/Seoul')
+        all_messages += self.process_eml_directory('./email project/baxter/emails_mary/2/Mary/', 'Asia/Seoul')
+        all_messages += self.process_eml_directory('./email project/baxter/emails_mary/mary00000001/', 'Asia/Seoul')
+        all_messages += self.process_eml_directory('./email project/baxter/emails_mary/mary/', 'Asia/Seoul')
         self.write_messages_to_files(all_messages)
 
     def write_mongo_document(self, message):
@@ -96,4 +101,3 @@ class Processor(object):
     def print_stats(self):
         stats = (self._overall_counter, self._document_counter, self._duplicate_counter)
         print "{} messages processed, with {} unique messages found and {} duplicates.".format(*stats)
-

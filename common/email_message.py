@@ -77,6 +77,7 @@ class EmailMessage:
             if not ignore_lines:
                 body_accumulator.append(line)
         self.body += '\n'.join(body_accumulator)
+        self.body = self.body.strip()
 
     def add_attachment(self, content, content_type, filename=None):
         """

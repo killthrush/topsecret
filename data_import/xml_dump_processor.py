@@ -12,7 +12,10 @@ from common.email_message import EmailMessage
 from email_parsing_helpers import (
     fix_broken_hotmail_headers,
     get_nested_payload,
-    use_full_parser
+    use_full_parser,
+    normalize_to_utc,
+    clean_sender,
+    clean_recipient
 )
 
 
@@ -21,15 +24,16 @@ class XMLDumpProcessor:
     Class that manages processing an XML extract of an outlook mailbox
     into structured EmailMessage instances.
     """
-    def __init__(self, process_path):
+    def __init__(self, process_path, timezone):
         """
         Initializer for the XMLDumpProcessor class
         :param process_path: Path at which we will find an XML dump file to process
-        :param use_eml_parsing: If True, the body content in the XML is expected to be in EML format and needs parsing
+        :param timezone: pytz timezone string used to convert dates to UTC
         :return: None
         """
         self._callbacks = dict()
         self._process_path = process_path
+        self._timezone = timezone
         if not os.path.exists(self._process_path):
             raise ValueError(str.format("File '{0}' does not exist.", self._process_path))
 
@@ -77,13 +81,14 @@ class XMLDumpProcessor:
             to_node = node.find('to')
             date_node = node.find('receivedat')
             subject = unicode(subject_node.text, 'utf-8') if not subject_node is None else ''
-            sender = '{} <{}>'.format(from_node.find('name').text, from_node.find('email').text)
-            recipient = '{} <{}>'.format(to_node.find('name').text, to_node.find('email').text)
-            date_string = '{} {} -0400'.format(date_node.find('date').text, date_node.find('time').text)
+            sender = clean_sender('{} <{}>'.format(from_node.find('name').text, from_node.find('email').text))
+            recipient = clean_recipient('{} <{}>'.format(to_node.find('name').text, to_node.find('email').text))
+            date_string = '{} {}'.format(date_node.find('date').text, date_node.find('time').text)
             return_message.append_body(unicode(text))
             return_message.subject = subject
             return_message.sender = sender
             return_message.recipient = recipient
             return_message.date = parse(date_string)
+            return_message.date = normalize_to_utc(return_message.date, self._timezone)
         return_message.source = "XML File {} node {}".format(self._process_path, node.attrib)
         return return_message
