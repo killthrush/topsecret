@@ -2,6 +2,7 @@ import re
 import hashlib
 import json
 from datetime import datetime
+from dateutil import parser
 from common.attachment import Attachment
 
 _junk_line_pattern = re.compile('^(\.|\s+)$')
@@ -12,20 +13,17 @@ class EmailMessage:
     Encapsulates an abstraction of an email message that's useful
     for processing and storage
     """
-    def __init__(self):
+    def __init__(self, **kwargs):
         """
         Initializer for the EmailMessage class
         :return: None
         """
-        self.recipient = None
-        self.sender = None
-        self.date = None
-        self.body = u''
-        self.subject = u''
         self.attachments = []
         self.ordinal_number = None
+        self._date = None
         self.source = None
         self.hasher = hashlib.md5()
+        self.from_dict(kwargs)
 
     @property
     def content_hash(self):
@@ -44,12 +42,12 @@ class EmailMessage:
         :return: dict
         """
         return {
-            'sender': self.sender,
-            'recipient': self.recipient,
-            'subject': self.subject,
-            'date': datetime.isoformat(self.date),
-            'body': self.body,
-            'attachments': [a.to_dict() for a in self.attachments]
+            u'sender': unicode(self.sender),
+            u'recipient': unicode(self.recipient),
+            u'subject': unicode(self.subject),
+            u'date': unicode(datetime.isoformat(self.date)),
+            u'body': unicode(self.body),
+            u'attachments': [a.to_dict() for a in self.attachments]
         }
 
     def to_dict(self):
@@ -59,8 +57,58 @@ class EmailMessage:
         :return: dict
         """
         return_dict = self._get_content()
-        return_dict['content_hash'] = self.content_hash
+        return_dict[u'content_hash'] = unicode(self.content_hash)
         return return_dict
+
+    def from_dict(self, input):
+        """
+        Initialize the instance from a dict
+        :param input: The dict used to populate the instance
+        :return: None
+        """
+        self.recipient = unicode(input.get('recipient'))
+        self.sender = unicode(input.get('sender'))
+        self.date = parser.parse(input.get('date')) if input.get('date') else None
+        self.body = unicode(input.get('body'))
+        self.subject = unicode(input.get('subject'))
+
+    def __eq__(self, other):
+        """
+        Override for equality
+        :param other: Another instance to compare
+        :return: True if equal, False otherwise
+        """
+        return type(self) == type(other) and self.to_dict() == other.to_dict()
+
+    def __ne__(self, other):
+        """
+        Override for inequality
+        :param other: Another instance to compare
+        :return: True if not equal, False otherwise
+        """
+        return type(self) != type(other) or self.to_dict() != other.to_dict()
+
+    @property
+    def date(self):
+        """
+        Getter for the date property
+        :return: the stored date value
+        """
+        return self._date
+
+    @date.setter
+    def date(self, value):
+        """
+        Setter for the date property
+        :param value: A value to set - supports strings, datetimes, and None
+        :return: None
+        """
+        if isinstance(value, str) or isinstance(value, unicode):
+            self._date = parser.parse(value)
+        elif isinstance(datetime) or value is None:
+            self._date = value
+        else:
+            raise ValueError("Type {} is not supported.".format(type(value)))
 
     def append_body(self, input_body_text):
         """
