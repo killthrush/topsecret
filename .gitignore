@@ -58,3 +58,4 @@ target/
 email project
 .idea
 assets/node_modules
+venv
