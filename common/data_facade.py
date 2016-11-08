@@ -5,6 +5,7 @@ import re
 
 DEFAULT_PAGE_SIZE = 10
 
+
 def requires_client(fn):
     """
     Ensures that a valid client connection is defined for a facade method
@@ -53,6 +54,16 @@ class DataFacade:
         if self.is_bound:
             raise TypeError("Client already bound.")
         self._client = MongoClient(mongo_uri)
+
+    @property
+    @requires_client
+    def db(self):
+        """
+        Returns the native mongodb database reference
+        for cases where the regular helpers are not needed.
+        :return: The database reference
+        """
+        return self._client.db
 
     @property
     def is_bound(self):

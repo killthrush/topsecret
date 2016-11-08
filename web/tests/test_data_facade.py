@@ -77,11 +77,25 @@ class DataFacadeTests(unittest.TestCase):
                 self.facade.bind_flask(self.app)
                 self.facade.bind(AppConfig.mongo_uri)
 
+    def test_db_property_from_pymongo(self):
+        self.facade.bind(AppConfig.mongo_uri)
+        self.assertIsNotNone(self.facade.db)
+
+    def test_db_property_from_flask(self):
+        with self.app.app_context():
+            self.facade.bind_flask(self.app)
+            self.assertIsNotNone(self.facade.db)
+
     def test_is_bound_property(self):
         with self.app.app_context():
             self.assertFalse(self.facade.is_bound)
             self.facade.bind_flask(self.app)
             self.assertTrue(self.facade.is_bound)
+
+    def test_unbound_facade_raises_exception_on_db_property_access(self):
+        with self.assertRaises(ValueError):
+            broken_facade = DataFacade()
+            broken_facade.db
 
     def test_unbound_facade_raises_exception_on_load(self):
         with self.assertRaises(ValueError):
