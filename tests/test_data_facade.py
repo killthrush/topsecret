@@ -54,6 +54,24 @@ class DataFacadeTests(unittest.TestCase):
         for email in [EmailMessage(**message) for message in loaded_messages]:
             self.assertTrue('1' in email.subject)
 
+    def test_sorting(self):
+        self.facade.bind(AppConfig.mongo_uri)
+        test_messages = []
+        for i in range(0, 100):
+            message = EmailMessage(subject='foo{}foo'.format(i), body='bar', sender='baz', recipient='bip', date='2016-07-07')
+            self.facade.store(self.email_collection, message.to_dict())
+            test_messages.append(message)
+        loaded_messages = self.facade.load(self.email_collection, page_size=100, sort='subject')
+        expected_messages = sorted(test_messages, key=lambda m: m.subject)
+        self.assertEqual(100, len(loaded_messages))
+        self.assertEqual(100, len(expected_messages))
+        compare_list = zip(loaded_messages, expected_messages)
+        for item in enumerate(compare_list):
+            item1 = item[1][0]
+            item2 = item[1][1]
+            msg = 'Item {} did not match: {} != {}'.format(item[0], item1['subject'], item2.subject)
+            self.assertEqual(item1['subject'], item2.subject, msg)
+
     def test_flask_bound_facade_cannot_rebind(self):
         with self.assertRaises(TypeError):
             with self.app.app_context():

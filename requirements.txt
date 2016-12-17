@@ -5,3 +5,4 @@ pymongo==3.2.1
 six==1.10.0
 voluptuous==0.9.3
 python-dateutil==2.5.3
+pytz==2016.10

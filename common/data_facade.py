@@ -87,6 +87,9 @@ class DataFacade:
         """
         Loads documents from the given collection given a set of query arguments
         :param collection_name: The name of the collection to query
+        :param page: The ordinal number of the page of data to load
+        :param page_size: The number of documents to load for the page
+        :param sort: A sort key to use.  Defaults to the document ID
         :param kwargs: Query arguments
         :return: A list containing the matching documents (or an empty list)
         """
@@ -95,7 +98,9 @@ class DataFacade:
         if page_size is None:
             page_size = DEFAULT_PAGE_SIZE
         if sort is None:
-            sort = { "_id": 1 }
+            sort_clause = { "_id": 1 }
+        else:
+            sort_clause = { sort: 1 }
 
         projection = {
             "subject": "$subject",
@@ -114,8 +119,8 @@ class DataFacade:
         ]
 
         if len(kwargs) > 0:
-            pipe.append(self.build_match(kwargs))
-        pipe.append({"$sort": sort})
+            pipe.append(self._build_match(kwargs))
+        pipe.append({"$sort": sort_clause})
         pipe.append({"$skip": (page - 1) * page_size})
         pipe.append({"$limit": page_size})
 
@@ -123,7 +128,7 @@ class DataFacade:
         result = list(collection.aggregate(pipeline=pipe, allowDiskUse=True))
         return result
 
-    def build_match(self, parameters):
+    def _build_match(self, parameters):
         match_dict = {}
         for parameter in parameters.items():
             value = re.compile(re.escape(parameter[1]))
