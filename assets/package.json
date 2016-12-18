@@ -5,9 +5,7 @@
   "main": "index.js",
   "scripts": {
     "build": "./node_modules/webpack/bin/webpack.js",
-    "start": "./node_modules/webpack-dev-server/bin/webpack-dev-server.js",
-    "archive": "tar cvJf node_modules.tar.xz node_modules",
-    "dearchive": "tar xvJf node_modules.tar.xz node_modules && npm rebuild"
+    "start": "./node_modules/webpack-dev-server/bin/webpack-dev-server.js"
   },
   "repository": {
     "type": "git",
@@ -24,13 +22,19 @@
     "url": "https://github.com/killthrush/topsecret/issues"
   },
   "homepage": "https://github.com/killthrush/topsecret#readme",
+  "dependencies": {
+    "axios": "^0.15.3",
+    "es6-promise": "^4.0.5",
+    "react": "^15.4.1",
+    "react-dom": "^15.4.1"
+  },
   "devDependencies": {
     "babel-cli": "^6.10.1",
     "babel-core": "^6.9.1",
     "babel-loader": "^6.2.4",
     "babel-preset-es2015": "^6.9.0",
     "babel-register": "^6.9.0",
-    "webpack": "^1.13.1",
-    "webpack-dev-server": "^1.14.1"
+    "webpack": "^2.2.0-rc.1",
+    "webpack-dev-server": "^2.2.0-rc.0"
   }
 }

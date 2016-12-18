@@ -1,10 +1,16 @@
 import webpack from 'webpack'
+import path from 'path'
 
 export default {
-  context: process.cwd(),
+  context: __dirname,
   entry: {
-    app: './src/index',
-    vendor: './src/vendor'
+    app: [path.join(__dirname, './src/index.jsx')],
+    vendor: [
+      'axios',
+      'es6-promise',
+      'react',
+      'react-dom'
+    ]
   },
   output: {
     filename: "[name].bundle.[chunkhash].js",
@@ -14,17 +20,17 @@ export default {
     loaders: [{
       test: /\.js$/,
       exclude: /node_modules/,
-      loader: 'babel'
+      loader: 'babel-loader'
     },
     {
       test: /\.jsx$/,
-      loader: 'babel'
+      loader: 'babel-loader'
     }]   
   },
   plugins: [
-    new webpack.optimize.CommonsChunkPlugin("vendor", "[name].bundle.[chunkhash].js")
+    new webpack.optimize.CommonsChunkPlugin('manifest')
   ],
   resolve: {
-    extensions: ['', '.js', '.jsx']
+    extensions: ['.js', '.jsx']
   }
 }
