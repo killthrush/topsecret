@@ -9,6 +9,7 @@ class DataFacadeTests(unittest.TestCase):
     def setUp(self):
         self.facade = DataFacade()
         self.app = Flask(AppConfig.app_name)
+        self.app.config['MONGO_HOST'] = AppConfig.mongo_uri
         self.email_collection = AppConfig.email_collection + '_test'
         self.source_collection = AppConfig.source_collection + '_test'
 

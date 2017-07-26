@@ -1,5 +1,6 @@
 import os
 import codecs
+from common.config import AppConfig
 from pymongo import MongoClient
 from pymongo.errors import DuplicateKeyError
 from eml_directory_processor import EMLDirectoryProcessor
@@ -12,16 +13,14 @@ TIMEZONES = {
 
 
 class Processor(object):
-    def __init__(self, process_directory=None, mongo_uri=None):
+    def __init__(self, process_directory=None):
         if not process_directory:
             process_directory = './email project/temp_processed'
-        if not mongo_uri:
-            mongo_uri = "mongodb://localhost:27017"
         self._process_directory = process_directory
         self._overall_counter = 0
         self._document_counter = 0
         self._duplicate_counter = 0
-        self._mongo_client = MongoClient(mongo_uri)
+        self._mongo_client = MongoClient(AppConfig.mongo_uri)
         self._email_collection = self._mongo_client['topsecret']['email']
         self._source_collection = self._mongo_client['topsecret']['source']
         self._email_collection.delete_many({})
