@@ -3,6 +3,7 @@ class Attachment:
     Encapsulates an abstraction of an email attachment that's useful
     for processing and storage
     """
+
     def __init__(self, content, content_type, filename=None):
         """
         Initializer for the Attachment class

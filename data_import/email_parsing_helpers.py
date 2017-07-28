@@ -194,7 +194,7 @@ def normalize_to_utc(date, timezone):
     :return: the input date, coerced to a utc date
     """
     local_tz = pytz.timezone(timezone)
-    new_date = date.replace(tzinfo = local_tz)
+    new_date = date.replace(tzinfo=local_tz)
     utc_tz = pytz.timezone('UTC')
     new_date = new_date.astimezone(utc_tz)
     return new_date
@@ -214,9 +214,7 @@ def _merge_broken_header_lines(accumulator, item):
             accumulator.append(cleaned_item)
             return accumulator
     try:
-        accumulator[len(accumulator)-1] = accumulator[len(accumulator)-1] + ' ' + cleaned_item
+        accumulator[len(accumulator) - 1] = accumulator[len(accumulator) - 1] + ' ' + cleaned_item
     except IndexError:  # edge case where the first line doesn't start with a header
         accumulator.append(cleaned_item)
     return accumulator
-
-

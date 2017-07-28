@@ -12,8 +12,6 @@ from email_parsing_helpers import (
     get_nested_payload,
     use_full_parser,
     normalize_to_utc,
-    clean_sender,
-    clean_recipient
 )
 
 
@@ -22,6 +20,7 @@ class EMLDirectoryProcessor:
     Class that manages processing a directory full of .eml
     files into structured EmailMessage instances.
     """
+
     def __init__(self, process_directory, timezone):
         """
         Initializer for the EMLDirectoryProcessor class

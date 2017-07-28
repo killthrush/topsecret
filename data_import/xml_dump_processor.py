@@ -24,6 +24,7 @@ class XMLDumpProcessor:
     Class that manages processing an XML extract of an outlook mailbox
     into structured EmailMessage instances.
     """
+
     def __init__(self, process_path, timezone):
         """
         Initializer for the XMLDumpProcessor class
@@ -80,7 +81,7 @@ class XMLDumpProcessor:
             from_node = node.find('from')
             to_node = node.find('to')
             date_node = node.find('receivedat')
-            subject = unicode(subject_node.text, 'utf-8') if not subject_node is None else ''
+            subject = unicode(subject_node.text, 'utf-8') if subject_node is not None else ''
             sender = clean_sender('{} <{}>'.format(from_node.find('name').text, from_node.find('email').text))
             recipient = clean_recipient('{} <{}>'.format(to_node.find('name').text, to_node.find('email').text))
             date_string = '{} {}'.format(date_node.find('date').text, date_node.find('time').text)

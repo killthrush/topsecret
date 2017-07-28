@@ -13,6 +13,7 @@ class EmailMessage:
     Encapsulates an abstraction of an email message that's useful
     for processing and storage
     """
+
     def __init__(self, **kwargs):
         """
         Initializer for the EmailMessage class

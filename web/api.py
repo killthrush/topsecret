@@ -15,6 +15,7 @@ validate_get_page = Schema({
     'sort': All(unicode, Length(min=1), msg="Sort attribute must be a nonzero-length string if specified")
 })
 
+
 @app.route('/emails/<id>', methods=['GET'])
 def emails_by_id(id):
     """
@@ -37,9 +38,6 @@ def emails_all():
     except Invalid as e:
         return e.error_message, 400
 
-
-
-
     # sender = querystring.get('sender')
     # if sender:
     #     sender = re.compile(re.escape(sender))
@@ -58,6 +56,7 @@ def emails_all():
 
     json_data = json.dumps([email for email in emails])
     return Response(json_data, mimetype='application/json')
+
 
 if __name__ == "__main__":
     app.run()

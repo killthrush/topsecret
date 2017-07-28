@@ -3,7 +3,7 @@ import json
 from web import api
 from common.email_message import EmailMessage
 from common.config import AppConfig
-from mock import patch, call, Mock
+from mock import patch
 from flask import abort
 
 
@@ -131,6 +131,7 @@ class ApiTests(unittest.TestCase):
 
     def assert_data_load(self, page=1, page_size=10, **kwargs):
         self.facade.load.assert_called_once_with(AppConfig.email_collection, page=page, page_size=page_size, **kwargs)
+
 
 if __name__ == '__main__':
     loader = unittest.TestLoader()
