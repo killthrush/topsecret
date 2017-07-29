@@ -24,6 +24,7 @@ class XMLDumpProcessor:
     Class that manages processing an XML extract of an outlook mailbox
     into structured EmailMessage instances.
     """
+
     def __init__(self, process_path, timezone):
         """
         Initializer for the XMLDumpProcessor class
@@ -67,8 +68,8 @@ class XMLDumpProcessor:
         :param node: The XML node corresponding to a message
         :return: An EmailMessage instance containing the message contents
         """
-        text = unicode(node.find('text').text)
-        text = unicode.lstrip(text, u'>')  # remove leading char that got into the text somehow
+        text = str(node.find('text').text)
+        text = str.lstrip(text, u'>')  # remove leading char that got into the text somehow
         if use_full_parser(text):
             text = fix_broken_hotmail_headers(text)
             parser = Parser()
@@ -80,11 +81,11 @@ class XMLDumpProcessor:
             from_node = node.find('from')
             to_node = node.find('to')
             date_node = node.find('receivedat')
-            subject = unicode(subject_node.text, 'utf-8') if not subject_node is None else ''
+            subject = str(subject_node.text, 'utf-8') if subject_node is not None else ''
             sender = clean_sender('{} <{}>'.format(from_node.find('name').text, from_node.find('email').text))
             recipient = clean_recipient('{} <{}>'.format(to_node.find('name').text, to_node.find('email').text))
             date_string = '{} {}'.format(date_node.find('date').text, date_node.find('time').text)
-            return_message.append_body(unicode(text))
+            return_message.append_body(str(text))
             return_message.subject = subject
             return_message.sender = sender
             return_message.recipient = recipient

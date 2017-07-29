@@ -31,7 +31,7 @@ class DataFacadeTests(unittest.TestCase):
         self.facade.bind(AppConfig.mongo_uri)
         message = EmailMessage(subject='foo', body='bar', sender='baz', recipient='bip', date='2016-07-07')
         self.facade.store(self.email_collection, message.to_dict())
-        loaded_messages = self.facade.load(self.email_collection, content_hash=unicode(message.content_hash))
+        loaded_messages = self.facade.load(self.email_collection, content_hash=str(message.content_hash))
         self.assertEqual(1, len(loaded_messages))
         self.assertEqual(message, EmailMessage(**loaded_messages[0]))
 
@@ -42,7 +42,7 @@ class DataFacadeTests(unittest.TestCase):
             self.facade.store(self.email_collection, message.to_dict())
         loaded_messages = self.facade.load(self.email_collection, page=12, page_size=6)
         self.assertEqual(6, len(loaded_messages))
-        for num, email in zip(range(67, 72), [EmailMessage(**message) for message in loaded_messages]):
+        for num, email in zip(range(67, 72), [EmailMessage(**message_args) for message_args in loaded_messages]):
             self.assertEqual(email.subject, 'foo{}'.format(num))
 
     def test_filter_by_field(self):
@@ -52,7 +52,7 @@ class DataFacadeTests(unittest.TestCase):
             self.facade.store(self.email_collection, message.to_dict())
         loaded_messages = self.facade.load(self.email_collection, page_size=60, subject='1')
         self.assertEqual(19, len(loaded_messages))
-        for email in [EmailMessage(**message) for message in loaded_messages]:
+        for email in [EmailMessage(**message_args) for message_args in loaded_messages]:
             self.assertTrue('1' in email.subject)
 
     def test_sorting(self):
@@ -130,6 +130,7 @@ class DataFacadeTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             broken_facade = DataFacade()
             broken_facade.clear_collection(self.email_collection, foo='bar')
+
 
 if __name__ == '__main__':
     loader = unittest.TestLoader()

@@ -25,4 +25,3 @@ def _create_config(env):
 
 current_config = os.getenv('ENVIRONMENT_CONFIG_KEY', DEFAULT_CONFIG)
 AppConfig = _create_config(current_config)
-

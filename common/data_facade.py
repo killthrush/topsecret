@@ -12,6 +12,7 @@ def requires_client(fn):
     :param fn: the function being wrapped
     :return: The wrapped method
     """
+
     def wrapper(self, *args, **kwargs):
         if not self._client:
             raise ValueError('No data source bound! Call bind_flask() or bind_client() first.')
@@ -24,6 +25,7 @@ class DataFacade:
     Facade to wrap select mongodb operations to keep the
     calling code nice, clean, and testable
     """
+
     def __init__(self, app=None, mongo_uri=None):
         """
         Initializer for the DataFacade class
@@ -32,7 +34,7 @@ class DataFacade:
         """
         self._client = None
         if app:
-          self.bind_flask(app)
+            self.bind_flask(app)
 
     def bind_flask(self, app, mongo_uri=None):
         """
@@ -98,26 +100,11 @@ class DataFacade:
         if page_size is None:
             page_size = DEFAULT_PAGE_SIZE
         if sort is None:
-            sort_clause = { "_id": 1 }
+            sort_clause = {"_id": 1}
         else:
-            sort_clause = { sort: 1 }
+            sort_clause = {sort: 1}
 
-        projection = {
-            "subject": "$subject",
-            "body": "$body",
-            "date": "$date",
-            "sender": "$sender",
-            "recipient": "$recipient",
-            "attachments": "$attachments",
-            "total_attachments": {
-                "$size": "$attachments"
-            }
-        }
-
-        pipe = [
-            # {"$project": projection}
-        ]
-
+        pipe = []
         if len(kwargs) > 0:
             pipe.append(self._build_match(kwargs))
         pipe.append({"$sort": sort_clause})
@@ -147,4 +134,3 @@ class DataFacade:
         :return: None
         """
         self._client.db[collection_name].insert_one(document)
-

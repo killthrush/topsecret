@@ -11,6 +11,7 @@ import re
 import pytz
 from dateutil.parser import parse
 from common.email_message import EmailMessage
+from functools import reduce
 
 _end_of_simple_header_pattern = re.compile('Content-Length: \d+', re.MULTILINE)
 _end_of_multipart_header_pattern = re.compile('X-OriginalArrivalTime: .+\r\n\r\n', re.MULTILINE)
@@ -177,7 +178,7 @@ def get_nested_payload(mime_message):
         content_type = sub_message.get_content_type()
         disposition = sub_message.get('Content-Disposition')
         if content_type == 'text/plain' and disposition is None:
-            x = unicode(sub_message.get_payload())
+            x = str(sub_message.get_payload())
             return_message.append_body(x)
         elif content_type in _ignored_content_types and disposition is None:
             pass  # throw away contents we don't want
@@ -194,7 +195,7 @@ def normalize_to_utc(date, timezone):
     :return: the input date, coerced to a utc date
     """
     local_tz = pytz.timezone(timezone)
-    new_date = date.replace(tzinfo = local_tz)
+    new_date = date.replace(tzinfo=local_tz)
     utc_tz = pytz.timezone('UTC')
     new_date = new_date.astimezone(utc_tz)
     return new_date
@@ -214,9 +215,7 @@ def _merge_broken_header_lines(accumulator, item):
             accumulator.append(cleaned_item)
             return accumulator
     try:
-        accumulator[len(accumulator)-1] = accumulator[len(accumulator)-1] + ' ' + cleaned_item
+        accumulator[len(accumulator) - 1] = accumulator[len(accumulator) - 1] + ' ' + cleaned_item
     except IndexError:  # edge case where the first line doesn't start with a header
         accumulator.append(cleaned_item)
     return accumulator
-
-

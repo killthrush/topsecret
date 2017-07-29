@@ -12,8 +12,6 @@ from email_parsing_helpers import (
     get_nested_payload,
     use_full_parser,
     normalize_to_utc,
-    clean_sender,
-    clean_recipient
 )
 
 
@@ -22,6 +20,7 @@ class EMLDirectoryProcessor:
     Class that manages processing a directory full of .eml
     files into structured EmailMessage instances.
     """
+
     def __init__(self, process_directory, timezone):
         """
         Initializer for the EMLDirectoryProcessor class
@@ -69,7 +68,7 @@ class EMLDirectoryProcessor:
         :return: A structured EmailMessage instance
         """
         with codecs.open(file_path, 'rb', 'windows-1252') as text_file:
-            text = unicode(''.join(text_file.readlines()))
+            text = str(''.join(text_file.readlines()))
             if use_full_parser(text):
                 text = fix_broken_yahoo_headers(text)
             parser = Parser()

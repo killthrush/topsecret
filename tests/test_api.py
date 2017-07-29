@@ -3,7 +3,7 @@ import json
 from web import api
 from common.email_message import EmailMessage
 from common.config import AppConfig
-from mock import patch, call, Mock
+from mock import patch
 from flask import abort
 
 
@@ -23,7 +23,7 @@ class ApiTests(unittest.TestCase):
         message = self.get_sample_message().to_dict()
         self.facade.db.email.find_one_or_404.return_value = message
         response = self.app.get('/emails/123')
-        self.assertEquals(response.data, json.dumps(message))
+        self.assertEquals(response.data, json.dumps(message).encode('utf-8'))
 
     def test_get_missing_email_with_valid_id(self):
         self.facade.db.email.find_one_or_404.side_effect = lambda x: abort(404)
@@ -33,13 +33,13 @@ class ApiTests(unittest.TestCase):
     def test_get_page_of_emails(self):
         response = self.app.get('/emails?page=10&page_size=20')
         self.assertEquals(200, response.status_code)
-        self.assertEquals(json.dumps(self.test_messages), response.get_data())
+        self.assertEquals(json.dumps(self.test_messages).encode('utf-8'), response.get_data())
         self.assert_data_load(page=10, page_size=20)
 
     def test_get_page_given_no_sort_option(self):
         response = self.app.get('/emails')
         self.assertEquals(200, response.status_code)
-        self.assertEquals(json.dumps(self.test_messages), response.get_data())
+        self.assertEquals(json.dumps(self.test_messages).encode('utf-8'), response.get_data())
         self.assert_data_load()
 
     def test_get_page_given_unspecified_sort_option(self):
@@ -49,13 +49,13 @@ class ApiTests(unittest.TestCase):
     def test_get_page_given_a_sort_option(self):
         response = self.app.get('/emails?sort=sender')
         self.assertEquals(200, response.status_code)
-        self.assertEquals(json.dumps(self.test_messages), response.get_data())
+        self.assertEquals(json.dumps(self.test_messages).encode('utf-8'), response.get_data())
         self.assert_data_load(sort=u'sender')
 
     def test_get_page_given_no_page_size(self):
         response = self.app.get('/emails')
         self.assertEquals(200, response.status_code)
-        self.assertEquals(json.dumps(self.test_messages), response.get_data())
+        self.assertEquals(json.dumps(self.test_messages).encode('utf-8'), response.get_data())
         self.assert_data_load()
 
     def test_get_page_given_unspecified_page_size(self):
@@ -93,7 +93,7 @@ class ApiTests(unittest.TestCase):
     def test_get_page_given_sender_filter(self):
         response = self.app.get('/emails?sender=foobar')
         self.assertEquals(200, response.status_code)
-        self.assertEquals(json.dumps(self.test_messages), response.get_data())
+        self.assertEquals(json.dumps(self.test_messages).encode('utf-8'), response.get_data())
         self.assert_data_load(sender=u'foobar')
 
     def test_get_page_given_unspecified_sender_filter(self):
@@ -103,7 +103,7 @@ class ApiTests(unittest.TestCase):
     def test_get_page_given_recipient_filter(self):
         response = self.app.get('/emails?recipient=foobar')
         self.assertEquals(200, response.status_code)
-        self.assertEquals(json.dumps(self.test_messages), response.get_data())
+        self.assertEquals(json.dumps(self.test_messages).encode('utf-8'), response.get_data())
         self.assert_data_load(recipient=u'foobar')
 
     def test_get_page_given_unspecified_recipient_filter(self):
@@ -113,7 +113,7 @@ class ApiTests(unittest.TestCase):
     def test_get_page_given_body_filter(self):
         response = self.app.get('/emails?body=foobar')
         self.assertEquals(200, response.status_code)
-        self.assertEquals(json.dumps(self.test_messages), response.get_data())
+        self.assertEquals(json.dumps(self.test_messages).encode('utf-8'), response.get_data())
         self.assert_data_load(body=u'foobar')
 
     def test_get_page_given_unspecified_body_filter(self):
@@ -131,6 +131,7 @@ class ApiTests(unittest.TestCase):
 
     def assert_data_load(self, page=1, page_size=10, **kwargs):
         self.facade.load.assert_called_once_with(AppConfig.email_collection, page=page, page_size=page_size, **kwargs)
+
 
 if __name__ == '__main__':
     loader = unittest.TestLoader()
