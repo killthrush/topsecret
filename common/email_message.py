@@ -34,7 +34,7 @@ class EmailMessage:
         """
         content = self._get_content()
         md5 = hashlib.md5()
-        md5.update(json.dumps(content))
+        md5.update(json.dumps(content).encode('utf-8'))
         return md5.hexdigest()
 
     def _get_content(self):
@@ -43,11 +43,11 @@ class EmailMessage:
         :return: dict
         """
         return {
-            u'sender': unicode(self.sender),
-            u'recipient': unicode(self.recipient),
-            u'subject': unicode(self.subject),
-            u'date': unicode(datetime.isoformat(self.date)),
-            u'body': unicode(self.body),
+            u'sender': str(self.sender),
+            u'recipient': str(self.recipient),
+            u'subject': str(self.subject),
+            u'date': str(datetime.isoformat(self.date)),
+            u'body': str(self.body),
             u'attachments': [a.to_dict() for a in self.attachments]
         }
 
@@ -58,7 +58,7 @@ class EmailMessage:
         :return: dict
         """
         return_dict = self._get_content()
-        return_dict[u'content_hash'] = unicode(self.content_hash)
+        return_dict[u'content_hash'] = str(self.content_hash)
         return return_dict
 
     def from_dict(self, input):
@@ -67,11 +67,11 @@ class EmailMessage:
         :param input: The dict used to populate the instance
         :return: None
         """
-        self.recipient = unicode(input.get('recipient'))
-        self.sender = unicode(input.get('sender'))
+        self.recipient = str(input.get('recipient'))
+        self.sender = str(input.get('sender'))
         self.date = parser.parse(input.get('date')) if input.get('date') else None
-        self.body = unicode(input.get('body'))
-        self.subject = unicode(input.get('subject'))
+        self.body = str(input.get('body'))
+        self.subject = str(input.get('subject'))
 
     def __eq__(self, other):
         """
@@ -104,9 +104,9 @@ class EmailMessage:
         :param value: A value to set - supports strings, datetimes, and None
         :return: None
         """
-        if isinstance(value, str) or isinstance(value, unicode):
+        if isinstance(value, str):
             self._date = parser.parse(value)
-        elif isinstance(datetime) or value is None:
+        elif isinstance(value, datetime) or value is None:
             self._date = value
         else:
             raise ValueError("Type {} is not supported.".format(type(value)))

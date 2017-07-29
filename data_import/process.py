@@ -1,3 +1,5 @@
+from __future__ import print_function
+
 import os
 import codecs
 from common.config import AppConfig
@@ -55,7 +57,7 @@ class Processor(object):
                     text_file.write('\n')
                     for attachment in message.attachments:
                         text_file.write('Attachment: {}\n'.format(attachment.filename or 'No Filename'))
-            print u"Wrote file '{0}'.".format(file_name)
+            print(u"Wrote file '{0}'.".format(file_name))
             self.write_mongo_document(message)
 
     def process_all(self):
@@ -80,10 +82,10 @@ class Processor(object):
         document['_id'] = document['content_hash']
         try:
             result = self._email_collection.insert_one(document)
-            print "Wrote document '{0} with hash {1}'.".format(result.inserted_id, document['content_hash'])
+            print("Wrote document '{0} with hash {1}'.".format(result.inserted_id, document['content_hash']))
             self._document_counter += 1
         except DuplicateKeyError:
-            print "Document with ID {} already exists".format(document['_id'])
+            print("Document with ID {} already exists".format(document['_id']))
             self._duplicate_counter += 1
 
     def email_message_extracted_handler(self, message):
@@ -95,8 +97,8 @@ class Processor(object):
             "content_hash": message.content_hash
         }
         self._source_collection.insert_one(message_source)
-        print "Processed Message {} from {}".format(message.ordinal_number, message.source)
+        print("Processed Message {} from {}".format(message.ordinal_number, message.source))
 
     def print_stats(self):
         stats = (self._overall_counter, self._document_counter, self._duplicate_counter)
-        print "{} messages processed, with {} unique messages found and {} duplicates.".format(*stats)
+        print("{} messages processed, with {} unique messages found and {} duplicates.".format(*stats))

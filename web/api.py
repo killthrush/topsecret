@@ -6,13 +6,19 @@ from common.data_facade import DataFacade, DEFAULT_PAGE_SIZE
 app = Flask('topsecret')
 data_facade = DataFacade(app)
 
+# Cross-platform way to have a single class that reporesents a string
+try:
+    basestring
+except NameError:
+    basestring = str
+
 validate_get_page = Schema({
     Required('page', default=1): All(Coerce(int), Range(min=1), msg='Page must be an integer >= 1'),
     Required('page_size', default=DEFAULT_PAGE_SIZE): All(Coerce(int), Range(min=1, max=1000), msg='Page size must be an integer >= 1 and <= 1000'),
-    'body': All(unicode, Length(min=1), msg="Body search must be a nonzero-length string if specified"),
-    'sender': All(unicode, Length(min=1), msg="Sender search must be a nonzero-length string if specified"),
-    'recipient': All(unicode, Length(min=1), msg="Recipient search must be a nonzero-length string if specified"),
-    'sort': All(unicode, Length(min=1), msg="Sort attribute must be a nonzero-length string if specified")
+    'body': All(basestring, Length(min=1), msg="Body search must be a nonzero-length string if specified"),
+    'sender': All(basestring, Length(min=1), msg="Sender search must be a nonzero-length string if specified"),
+    'recipient': All(basestring, Length(min=1), msg="Recipient search must be a nonzero-length string if specified"),
+    'sort': All(basestring, Length(min=1), msg="Sort attribute must be a nonzero-length string if specified")
 })
 
 

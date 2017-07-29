@@ -68,7 +68,7 @@ class EMLDirectoryProcessor:
         :return: A structured EmailMessage instance
         """
         with codecs.open(file_path, 'rb', 'windows-1252') as text_file:
-            text = unicode(''.join(text_file.readlines()))
+            text = str(''.join(text_file.readlines()))
             if use_full_parser(text):
                 text = fix_broken_yahoo_headers(text)
             parser = Parser()

@@ -31,7 +31,7 @@ class DataFacadeTests(unittest.TestCase):
         self.facade.bind(AppConfig.mongo_uri)
         message = EmailMessage(subject='foo', body='bar', sender='baz', recipient='bip', date='2016-07-07')
         self.facade.store(self.email_collection, message.to_dict())
-        loaded_messages = self.facade.load(self.email_collection, content_hash=unicode(message.content_hash))
+        loaded_messages = self.facade.load(self.email_collection, content_hash=str(message.content_hash))
         self.assertEqual(1, len(loaded_messages))
         self.assertEqual(message, EmailMessage(**loaded_messages[0]))
 
